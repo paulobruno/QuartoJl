@@ -27,7 +27,7 @@ Base.:!(b::UInt8) = ~(b ⊻ 0xf0)
 mutable struct QuartoEnv
     board::Matrix{UInt8}
     player::Bool
-    availablepieces::BitArray{1}
+    availablepieces::BitVector
 end
 
 
@@ -137,7 +137,7 @@ function getaction(env::QuartoEnv)
         end
         
         if (0x0f < env.board[c, r])
-            println("Invalid move, there is already a piece in ($c, $r).")
+            println("Invalid move, there is already a piece in ($(c), $(r)).")
         else
             break
         end
