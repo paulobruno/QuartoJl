@@ -47,7 +47,8 @@ function iswin(line::Vector{UInt8})
     return cond1 || cond2
 end
 
-function iswin(b::Matrix{UInt8})
+function iswin(env::QuartoEnv)
+    b = env.board
     return iswin(b[:,1]) ||
            iswin(b[:,2]) ||
            iswin(b[:,3]) ||
@@ -60,15 +61,13 @@ function iswin(b::Matrix{UInt8})
            iswin([b[1,4], b[2,3], b[3,2], b[4,1]])
 end
 
-function isdraw(b::Matrix{UInt8})
-    # PB: to check which is faster, the for below or a & of all positions then 
-    #   check if it is less than 0xf0
-    for p ∈ b
+function isdraw(env::QuartoEnv)
+    for p ∈ env.board
         if (p < 0xf0)
             return false
         end
     end
-    return true
+    return !iswin(env)
 end
 
 function render(env::QuartoEnv)
@@ -157,7 +156,7 @@ env = QuartoEnv()
 
 render(env)
 
-while !(iswin(env.board) || isdraw(env.board))
+while !(isdraw(env) || iswin(env))
     if env.player
         a = getaction(env)
         setaction!(env, a)
@@ -167,8 +166,8 @@ while !(iswin(env.board) || isdraw(env.board))
     render(env)
 end
 
-if iswin(env.board)
-    println("Player $(!env.player) won the game!")
-else
+if isdraw(env)
     println("It's a draw!")
+else
+    println("Player $(!env.player) won the game!")
 end
