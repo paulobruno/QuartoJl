@@ -178,23 +178,36 @@ function performwinningmmove(env, log)
     performrandommove(env, log)
 end
 
-
-env = QuartoEnv()
-
-render(env)
-
-while !(isdraw(env) || iswin(env))
-    if env.player
+function performaction(player::Char, env::QuartoEnv, log::Bool)
+    if player == 'h'
         a = getaction(env)
-        setaction!(env, a, false)
+        setaction!(env, a, log)
+    elseif player == 'r'
+        performrandommove(env, log)
+    elseif 'w' == player
+        performwinningmmove(env, log)
     else
-        performrandommove(env, true)
+        @error "Unrecognized player type. Options are 'h', 'r', or 'w'."
     end
-    render(env)
 end
 
-if isdraw(env)
-    println("It's a draw!")
-else
-    println("Player '$(!env.player)' won the game!")
+function run(env::QuartoEnv, player1::Char, player2::Char, rendergame::Bool=false, logmove::Bool=false)
+    rendergame && render(env)
+
+    while !(isdraw(env) || iswin(env))
+        if env.player
+            performaction(player1, env, logmove)
+        else
+            performaction(player2, env, logmove)
+        end
+        rendergame && render(env)
+    end
+
+    if isdraw(env)
+        logmove && println("It's a draw!")
+        return 3
+    else
+        logmove && println("Player '$(!env.player)' won the game!")
+        return env.player ? 2 : 1
+    end
 end
