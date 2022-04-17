@@ -89,17 +89,17 @@ function render(env::QuartoEnv)
     println()
 end
 
-function showavailablepieces(env)
+function showavailablepieces(env::QuartoEnv)
     for i ∈ 1:length(env.availablepieces)
         env.availablepieces[i] && println("\t$(i): ", symbollut[i])
     end
 end
 
-function getavailablepieces(env)
+function getavailablepieces(env::QuartoEnv)
     return findall(env.availablepieces)
 end
 
-function getavailablepositions(env)
+function getavailablepositions(env::QuartoEnv)
     return findall(x -> (x & 0xf0) == 0x00, env.board)
 end
 
@@ -144,7 +144,7 @@ function getaction(env::QuartoEnv)
     return (c, r, p)
 end
 
-function setaction(env, a::Tuple{UInt8, UInt8, UInt8})
+function setaction(env::QuartoEnv, a::Tuple{UInt8, UInt8, UInt8})
     copyenv = copy(env)
     copyenv.availablepieces[a[3]] = false
     copyenv.board[a[1], a[2]] = (0xf0 | (a[3] - 0x01))
@@ -159,13 +159,13 @@ function setaction!(env::QuartoEnv, a::Tuple{UInt8, UInt8, UInt8}, log::Bool=fal
     env.player = !env.player
 end
 
-function performrandommove(env, log)
+function performrandommove(env::QuartoEnv, log::Bool=false)
     action = rand(getavailablepieces(env))
     position = rand(getavailablepositions(env))
     setaction!(env, (UInt8(position[1]), UInt8(position[2]), UInt8(action)), log)
 end
 
-function performwinningmmove(env, log)
+function performwinningmmove(env::QuartoEnv, log::Bool=false)
     for a ∈ getavailablepieces(env)
         for p ∈ getavailablepositions(env)
             copyenv = setaction(env, (UInt8(p[1]), UInt8(p[2]), UInt8(a)))
@@ -178,7 +178,7 @@ function performwinningmmove(env, log)
     performrandommove(env, log)
 end
 
-function performaction(player::Char, env::QuartoEnv, log::Bool)
+function performaction(player::Char, env::QuartoEnv, log::Bool=false)
     if player == 'h'
         a = getaction(env)
         setaction!(env, a, log)
