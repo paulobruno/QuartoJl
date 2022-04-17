@@ -1,5 +1,11 @@
 # QuartoJl
-Julia implementation of the board game Quarto
+Julia implementation of the board game [Quarto](https://en.wikipedia.org/wiki/Quarto_(board_game)).
+
+## Piece properties
+**Color**: red or blue.  
+**Orientation**: vertical or horizontal.  
+**Arrows**: with or without arrows.  
+**Quantity**: one or two lines.
 
 ## Play a game against random opponent
 ```
