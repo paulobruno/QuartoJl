@@ -163,6 +163,19 @@ function performrandommove(env)
     setaction!(env, (UInt8(position[1]), UInt8(position[2]), UInt8(action)))
 end
 
+function performwinningmmove(env)
+    for a ∈ getavailablepieces(env)
+        for p ∈ getavailablepositions(env)
+            copyenv = setaction((UInt8(p[1]), UInt8(p[2]), UInt8(a)))
+            if iswin(copyenv)
+                setaction!(env, (UInt8(p[1]), UInt8(p[2]), UInt8(a)))
+                return
+            end
+        end
+    end
+    performrandommove(env)
+end
+
 
 env = QuartoEnv()
 
