@@ -1,5 +1,8 @@
 using LinearAlgebra
 
+import REPL
+using REPL.TerminalMenus
+
 
 symbollut = [
     "\e[31m↔\u001b[0m", 
@@ -106,44 +109,44 @@ function getavailablepositions(env::QuartoEnv)
 end
 
 function getaction(env::QuartoEnv)
-    print("Player '$(env.player)' please enter the piece number (1-16): ")
-    p = parse(UInt8, readline())
+    menu = RadioMenu([symbollut[i] for i in getavailablepieces(env)], pagesize=5)
     
-    while ((0x01 > p) || (0x10 < p) || (false == env.availablepieces[p]))
-        println("Please select one available piece. The available pieces are:")
-        showavailablepieces(env)
-        print("Player '$(env.player)' please enter the piece number: ")
-        p = parse(UInt8, readline())
+    choice = -1
+
+    while (-1 == choice)
+        choice = request("Player '$(env.player)' please select a piece:", menu)
     end
+
+    piece = UInt8(getavailablepieces(env)[choice])
     
-    r = 0
-    c = 0
+    row = 0
+    col = 0
     
     while true
         print("Player '$(env.player)' please enter the row number (1-4): ")
-        r = parse(UInt8, readline())
+        row = parse(UInt8, readline())
 
-        while ((r > 4) || (r < 1))
+        while ((row > 4) || (row < 1))
             print("Invalid row. Please select one row position from 1 to 4: ")
-            r = parse(UInt8, readline())
+            row = parse(UInt8, readline())
         end
         
         print("Player '$(env.player)' please enter the column number (1-4): ")    
-        c = parse(UInt8, readline())
+        col = parse(UInt8, readline())
         
-        while ((c > 4) || (c < 1))
+        while ((col > 4) || (col < 1))
             print("Invalid row. Please select one column position from 1 to 4: ")
-            c = parse(UInt8, readline())
+            col = parse(UInt8, readline())
         end
         
-        if (0x0f < env.board[c, r])
-            println("Invalid move, there is already a piece in ($(c), $(r)).")
+        if (0x0f < env.board[col, row])
+            println("Invalid move, there is already a piece in ($(row), $(col)).")
         else
             break
         end
     end 
-            
-    return (c, r, p)
+    
+    return (col, row, piece)
 end
 
 function setaction(env::QuartoEnv, a::Tuple{UInt8, UInt8, UInt8})
