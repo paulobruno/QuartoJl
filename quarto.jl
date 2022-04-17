@@ -21,7 +21,6 @@ symbollut = [
 Base.:!(b::UInt8) = ~(b ⊻ 0xf0)
 
 
-# PB: why mutable? to study
 mutable struct QuartoEnv
     board::Matrix{UInt8}
     player::Bool
@@ -72,7 +71,6 @@ function isdraw(b::Matrix{UInt8})
     return true
 end
 
-
 function render(env::QuartoEnv)
     for j ∈ 1: 4
         for i ∈ 1: 4
@@ -91,7 +89,6 @@ function showavailablepieces(env)
         env.availablepieces[i] && println("\t$(i): ", symbollut[i])
     end
 end
-
 
 function getaction(env::QuartoEnv)
     print("Player '$(env.player)' please enter the piece number (1-16): ")
