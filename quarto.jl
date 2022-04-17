@@ -1,3 +1,6 @@
+using LinearAlgebra
+
+
 symbollut = [
     "\e[31m↔\u001b[0m", 
     "\e[31m—\u001b[0m",
@@ -34,6 +37,7 @@ function QuartoEnv()
     QuartoEnv(board, true, pieces)
 end
 
+
 function copy(env::QuartoEnv)
     return QuartoEnv(Base.copy(env.board), Base.copy(env.player), Base.copy(env.availablepieces))
 end
@@ -44,7 +48,7 @@ function reset!(env::QuartoEnv)
     env.player = true
 end
 
-function iswin(line::Vector{UInt8})
+function iswin(line::SubArray{UInt8})
     cond1 = (line[1] & line[2] & line[3] & line[4]) > 0xf0
     cond2 = (!line[1] & !line[2] & !line[3] & !line[4]) > 0xf0
     return cond1 || cond2
@@ -52,16 +56,16 @@ end
 
 function iswin(env::QuartoEnv)
     b = env.board
-    return iswin(b[:,1]) ||
-           iswin(b[:,2]) ||
-           iswin(b[:,3]) ||
-           iswin(b[:,4]) ||
-           iswin(b[1,:]) ||
-           iswin(b[2,:]) ||
-           iswin(b[3,:]) ||
-           iswin(b[4,:]) ||
-           iswin([b[1,1], b[2,2], b[3,3], b[4,4]]) ||
-           iswin([b[1,4], b[2,3], b[3,2], b[4,1]])
+    return iswin(@view b[:,1]) ||
+           iswin(@view b[:,2]) ||
+           iswin(@view b[:,3]) ||
+           iswin(@view b[:,4]) ||
+           iswin(@view b[1,:]) ||
+           iswin(@view b[2,:]) ||
+           iswin(@view b[3,:]) ||
+           iswin(@view b[4,:]) ||
+           iswin(view(b, diagind(b)))
+           iswin(view(view(b, :, [4,3,2,1]), diagind(b)))
 end
 
 function isdraw(env::QuartoEnv)
