@@ -146,14 +146,24 @@ function setaction!(env::QuartoEnv, a::Tuple{UInt8, UInt8, UInt8})
     env.player = !env.player
 end
 
+function performrandommove(env)
+    action = rand(getavailablepieces(env))
+    position = rand(getavailablepositions(env))
+    setaction!(env, (UInt8(position[1]), UInt8(position[2]), UInt8(action)))
+end
+
 
 env = QuartoEnv()
 
 render(env)
 
 while !(iswin(env.board) || isdraw(env.board))
-    a = getaction(env)
-    setaction!(env, a)
+    if env.player
+        a = getaction(env)
+        setaction!(env, a)
+    else
+        performrandommove(env)
+    end
     render(env)
 end
 
