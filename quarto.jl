@@ -27,6 +27,7 @@ mutable struct QuartoEnv
     availablepieces::BitArray{1}
 end
 
+
 function QuartoEnv()
     board = Matrix{UInt8}(undef, 4, 4)
     fill!(board, 0x00)
@@ -85,6 +86,7 @@ function render(env::QuartoEnv)
         end
         println()
     end
+    println()
 end
 
 function showavailablepieces(env)
@@ -194,5 +196,5 @@ end
 if isdraw(env)
     println("It's a draw!")
 else
-    println("Player $(!env.player) won the game!")
+    println("Player '$(!env.player)' won the game!")
 end
