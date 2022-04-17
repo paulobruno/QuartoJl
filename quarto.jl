@@ -35,6 +35,10 @@ function QuartoEnv()
     QuartoEnv(board, true, pieces)
 end
 
+function copy(env::QuartoEnv)
+    return QuartoEnv(Base.copy(env.board), Base.copy(env.player), Base.copy(env.availablepieces))
+end
+
 function reset!(env::QuartoEnv)
     fill!(env.board, 0x00)
     fill!(env.availablepieces, true)
@@ -136,6 +140,14 @@ function getaction(env::QuartoEnv)
     end 
             
     return (c, r, p)
+end
+
+function setaction(a::Tuple{UInt8, UInt8, UInt8})
+    copyenv = copy(env)
+    copyenv.availablepieces[a[3]] = false
+    copyenv.board[a[1], a[2]] = (0xf0 | (a[3] - 0x01))
+    copyenv.player = !copyenv.player
+    return copyenv
 end
 
 function setaction!(env::QuartoEnv, a::Tuple{UInt8, UInt8, UInt8})
