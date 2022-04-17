@@ -142,7 +142,7 @@ end
 function setaction!(env::QuartoEnv, a::Tuple{UInt8, UInt8, UInt8})
     env.board[a[1], a[2]] = (0xf0 | (a[3] - 0x01))
     env.availablepieces[a[3]] = false
-    println("You placed piece $(a[3]) in ($(a[1]), $(a[2])) position.")
+    println("Player '$(env.player)' placed piece $(a[3]) in ($(a[2]), $(a[1])) position.")
     env.player = !env.player
 end
 
