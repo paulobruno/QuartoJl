@@ -38,6 +38,7 @@ end
 
 function reset!(env::QuartoEnv)
     fill!(env.board, 0x00)
+    fill!(env.availablepieces, true)
     env.player = true
 end
 
