@@ -78,8 +78,8 @@ function isdraw(env::QuartoEnv)
 end
 
 function render(env::QuartoEnv)
-    for j ∈ 1: 4
-        for i ∈ 1: 4
+    for j ∈ 1:4
+        for i ∈ 1:4
             if (0x0f < env.board[i, j])
                 print(symbollut[(0x0f & env.board[i, j]) + 0x01], ' ')
             else
