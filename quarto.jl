@@ -29,10 +29,8 @@ end
 
 
 function QuartoEnv()
-    board = Matrix{UInt8}(undef, 4, 4)
-    fill!(board, 0x00)
-    pieces = BitArray(undef, 16)
-    fill!(pieces, true)
+    board = fill(0x00, 4, 4)
+    pieces = trues(16)
     QuartoEnv(board, true, pieces)
 end
 
