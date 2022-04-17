@@ -152,30 +152,30 @@ function setaction(env, a::Tuple{UInt8, UInt8, UInt8})
     return copyenv
 end
 
-function setaction!(env::QuartoEnv, a::Tuple{UInt8, UInt8, UInt8})
+function setaction!(env::QuartoEnv, a::Tuple{UInt8, UInt8, UInt8}, log::Bool=false)
     env.board[a[1], a[2]] = (0xf0 | (a[3] - 0x01))
     env.availablepieces[a[3]] = false
-    println("Player '$(env.player)' placed piece $(a[3]) in ($(a[2]), $(a[1])) position.")
+    log && println("Player '$(env.player)' placed piece $(a[3]) in ($(a[2]), $(a[1])) position.")
     env.player = !env.player
 end
 
-function performrandommove(env)
+function performrandommove(env, log)
     action = rand(getavailablepieces(env))
     position = rand(getavailablepositions(env))
-    setaction!(env, (UInt8(position[1]), UInt8(position[2]), UInt8(action)))
+    setaction!(env, (UInt8(position[1]), UInt8(position[2]), UInt8(action)), log)
 end
 
-function performwinningmmove(env)
+function performwinningmmove(env, log)
     for a ∈ getavailablepieces(env)
         for p ∈ getavailablepositions(env)
             copyenv = setaction(env, (UInt8(p[1]), UInt8(p[2]), UInt8(a)))
             if iswin(copyenv)
-                setaction!(env, (UInt8(p[1]), UInt8(p[2]), UInt8(a)))
+                setaction!(env, (UInt8(p[1]), UInt8(p[2]), UInt8(a)), log)
                 return
             end
         end
     end
-    performrandommove(env)
+    performrandommove(env, log)
 end
 
 
@@ -186,9 +186,9 @@ render(env)
 while !(isdraw(env) || iswin(env))
     if env.player
         a = getaction(env)
-        setaction!(env, a)
+        setaction!(env, a, false)
     else
-        performrandommove(env)
+        performrandommove(env, true)
     end
     render(env)
 end
