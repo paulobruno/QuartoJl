@@ -94,6 +94,10 @@ function getavailablepieces(env)
     return findall(env.availablepieces)
 end
 
+function getavailablepositions(env)
+    return findall(x -> (x & 0xf0) == 0x00, env.board)
+end
+
 function getaction(env::QuartoEnv)
     print("Player '$(env.player)' please enter the piece number (1-16): ")
     p = parse(UInt8, readline())
