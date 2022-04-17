@@ -90,6 +90,10 @@ function showavailablepieces(env)
     end
 end
 
+function getavailablepieces(env)
+    return findall(env.availablepieces)
+end
+
 function getaction(env::QuartoEnv)
     print("Player '$(env.player)' please enter the piece number (1-16): ")
     p = parse(UInt8, readline())
