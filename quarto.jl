@@ -189,10 +189,11 @@ function performaction(player::Char, env::QuartoEnv, log::Bool=false)
         setaction!(env, a, log)
     elseif player == 'r'
         performrandommove(env, log)
-    elseif 'w' == player
+    elseif player == 'w'
         performwinningmmove(env, log)
     else
-        @error "Unrecognized player type. Options are 'h', 'r', or 'w'."
+        #println("Unrecognized player type '$(player)'. Options are 'h', 'r', or 'w'. Using random player.")
+        performrandommove(env, log)
     end
 end
 
