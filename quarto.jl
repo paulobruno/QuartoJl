@@ -30,23 +30,29 @@ Base.:!(b::UInt8) = ~(b ⊻ 0xf0)
 mutable struct QuartoEnv
     board::Matrix{UInt8}
     player::Bool
+    availablepositions::BitMatrix
     availablepieces::BitVector
 end
 
 
 function QuartoEnv()
     board = fill(0x00, 4, 4)
+    positions = trues(4, 4)
     pieces = trues(16)
-    QuartoEnv(board, true, pieces)
+    QuartoEnv(board, true, positions, pieces)
 end
 
 
 function copy(env::QuartoEnv)
-    return QuartoEnv(Base.copy(env.board), Base.copy(env.player), Base.copy(env.availablepieces))
+    return QuartoEnv(Base.copy(env.board), 
+                     Base.copy(env.player), 
+                     Base.copy(env.availablepositions),
+                     Base.copy(env.availablepieces))
 end
 
 function reset!(env::QuartoEnv)
     fill!(env.board, 0x00)
+    fill!(env.availablepositions, true)
     fill!(env.availablepieces, true)
     env.player = true
 end
@@ -105,7 +111,7 @@ function getavailablepieces(env::QuartoEnv)
 end
 
 function getavailablepositions(env::QuartoEnv)
-    return findall(x -> (x & 0xf0) == 0x00, env.board)
+    return findall(env.availablepositions)
 end
 
 function getaction(env::QuartoEnv)
@@ -151,6 +157,7 @@ end
 
 function setaction(env::QuartoEnv, a::Tuple{UInt8, UInt8, UInt8})
     copyenv = copy(env)
+    copyenv.availablepositions[a[1], a[2]] = false
     copyenv.availablepieces[a[3]] = false
     copyenv.board[a[1], a[2]] = (0xf0 | (a[3] - 0x01))
     copyenv.player = !copyenv.player
@@ -159,6 +166,7 @@ end
 
 function setaction!(env::QuartoEnv, a::Tuple{UInt8, UInt8, UInt8}, log::Bool=false)
     env.board[a[1], a[2]] = (0xf0 | (a[3] - 0x01))
+    env.availablepositions[a[1], a[2]] = false
     env.availablepieces[a[3]] = false
     log && println("Player '$(env.player)' placed piece $(a[3]) in ($(a[2]), $(a[1])) position.")
     env.player = !env.player
