@@ -73,8 +73,8 @@ function iswin(env::QuartoEnv)
            iswin(@view b[2,:]) ||
            iswin(@view b[3,:]) ||
            iswin(@view b[4,:]) ||
-           iswin(view(b, diagind(b))) ||
-           iswin(view(view(b, :, [4,3,2,1]), diagind(b)))
+           iswin(@view b[1:5:16]) ||
+           iswin(@view b[4:3:13])
 end
 
 function isdraw(env::QuartoEnv)
