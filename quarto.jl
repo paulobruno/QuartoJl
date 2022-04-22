@@ -172,6 +172,62 @@ function setaction!(env::QuartoEnv, a::Tuple{UInt8, UInt8, UInt8}, log::Bool=fal
     env.player = !env.player
 end
 
+function minmaxmove(env::QuartoEnv, depth::Integer)
+    if iswin(env)
+        return -2 * env.player + 1
+    elseif (depth == 0)  || isdraw(env)
+        return 0
+    end
+
+    for a ∈ getavailablepieces(env)
+        for p ∈ getavailablepositions(env)
+            copyenv = setaction(env, (UInt8(p[1]), UInt8(p[2]), UInt8(a)))
+            result = minmaxmove(copyenv, depth-1)
+            # prune minmax
+            if env.player && result == 1
+                return 1
+            elseif !env.player && result == -1
+                return -1
+            end
+        end
+    end
+
+    return 0
+end
+
+function performminmaxaction(env::QuartoEnv, depth::Integer, log::Bool=false)
+    if depth == 0
+        performrandommove(env, log)
+    end
+
+    outcomes = Vector{Integer}()
+
+    for a ∈ getavailablepieces(env)
+        for p ∈ getavailablepositions(env)
+            copyenv = setaction(env, (UInt8(p[1]), UInt8(p[2]), UInt8(a)))
+            push!(outcomes, minmaxmove(copyenv, depth-1))
+        end
+    end
+
+    bestactions = Vector{Integer}()
+
+    if env.player
+        bestactions = findall(outcomes .== maximum(outcomes))
+    else
+        bestactions = findall(outcomes .== minimum(outcomes))
+    end
+
+    move = rand(bestactions)
+
+    a = div(move-1, length(getavailablepositions(env))) + 1
+    p = mod(move-1, length(getavailablepositions(env))) + 1
+
+    a = getavailablepieces(env)[a]
+    p = getavailablepositions(env)[p]
+
+    setaction!(env, (UInt8(p[1]), UInt8(p[2]), UInt8(a)), log)
+end
+
 function performrandommove(env::QuartoEnv, log::Bool=false)
     action = rand(getavailablepieces(env))
     position = rand(getavailablepositions(env))
@@ -199,6 +255,12 @@ function performaction(player::Char, env::QuartoEnv, log::Bool=false)
         performrandommove(env, log)
     elseif player == 'w'
         performwinningmmove(env, log)
+    elseif player == '3'
+        performminmaxaction(env, 3, log)
+    elseif player == '2'
+        performminmaxaction(env, 2, log)
+    elseif player == '1'
+        performminmaxaction(env, 1, log)
     else
         #println("Unrecognized player type '$(player)'. Options are 'h', 'r', or 'w'. Using random player.")
         performrandommove(env, log)
