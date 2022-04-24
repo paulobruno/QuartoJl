@@ -114,17 +114,7 @@ function getavailablepositions(env::QuartoEnv)
     return findall(env.availablepositions)
 end
 
-function getaction(env::QuartoEnv)
-    menu = RadioMenu([symbollut[i] for i in getavailablepieces(env)], pagesize=5)
-    
-    choice = -1
-
-    while (-1 == choice)
-        choice = request("Player '$(env.player)' please select a piece:", menu)
-    end
-
-    piece = UInt8(getavailablepieces(env)[choice])
-    
+function getaction(env::QuartoEnv, piece::UInt8)
     row = 0
     col = 0
     
@@ -169,7 +159,6 @@ function setaction!(env::QuartoEnv, a::Tuple{UInt8, UInt8, UInt8}, log::Bool=fal
     env.availablepositions[a[1], a[2]] = false
     env.availablepieces[a[3]] = false
     log && println("Player '$(env.player)' placed piece $(a[3]) in ($(a[2]), $(a[1])) position.")
-    env.player = !env.player
 end
 
 function minmaxmove(env::QuartoEnv, depth::Integer)
@@ -228,43 +217,85 @@ function performminmaxaction(env::QuartoEnv, depth::Integer, log::Bool=false)
     setaction!(env, (UInt8(p[1]), UInt8(p[2]), UInt8(a)), log)
 end
 
-function performrandommove(env::QuartoEnv, log::Bool=false)
-    action = rand(getavailablepieces(env))
+function performrandommove(env::QuartoEnv, piece::UInt8, log::Bool=false)
     position = rand(getavailablepositions(env))
-    setaction!(env, (UInt8(position[1]), UInt8(position[2]), UInt8(action)), log)
+    setaction!(env, (UInt8(position[1]), UInt8(position[2]), piece), log)
 end
 
-function performwinningmmove(env::QuartoEnv, log::Bool=false)
-    for a ∈ getavailablepieces(env)
-        for p ∈ getavailablepositions(env)
-            copyenv = setaction(env, (UInt8(p[1]), UInt8(p[2]), UInt8(a)))
-            if iswin(copyenv)
-                setaction!(env, (UInt8(p[1]), UInt8(p[2]), UInt8(a)), log)
-                return
-            end
+function performwinningmmove(env::QuartoEnv, piece::UInt8, log::Bool=false)
+    for p ∈ getavailablepositions(env)
+        copyenv = setaction(env, (UInt8(p[1]), UInt8(p[2]), piece))
+        if iswin(copyenv)
+            setaction!(env, (UInt8(p[1]), UInt8(p[2]), piece), log)
+            return
         end
     end
-    performrandommove(env, log)
+    performrandommove(env, piece, log)
 end
 
-function performaction(player::Char, env::QuartoEnv, log::Bool=false)
+function performaction(player::Char, env::QuartoEnv, piece::UInt8, log::Bool=false)
     if player == 'h'
-        a = getaction(env)
+        a = getaction(env, piece)
         setaction!(env, a, log)
     elseif player == 'r'
-        performrandommove(env, log)
+        performrandommove(env, piece, log)
     elseif player == 'w'
-        performwinningmmove(env, log)
+        performwinningmmove(env, piece, log)
     elseif player == '3'
-        performminmaxaction(env, 3, log)
+        performminmaxaction(env, piece, 3, log)
     elseif player == '2'
-        performminmaxaction(env, 2, log)
+        performminmaxaction(env, piece, 2, log)
     elseif player == '1'
-        performminmaxaction(env, 1, log)
+        performminmaxaction(env, piece, 1, log)
     else
         #println("Unrecognized player type '$(player)'. Options are 'h', 'r', or 'w'. Using random player.")
         performrandommove(env, log)
     end
+end
+
+function selectpiecerandom(env::QuartoEnv, log::Bool=false)
+    piece = UInt8(rand(getavailablepieces(env)))
+    log && println("Player '$(env.player)' selected piece $(symbollut[piece]).")
+    return piece
+end
+
+function selectpiecehuman(env::QuartoEnv, log::Bool=false)
+    menu = RadioMenu([symbollut[i] for i in getavailablepieces(env)], pagesize=5)
+    
+    choice = -1
+
+    while (-1 == choice)
+        choice = request("Player '$(env.player)' please select a piece:", menu)
+    end
+
+    piece = UInt8(getavailablepieces(env)[choice])
+
+    log && println("Player '$(env.player)' selected piece $(symbollut[piece]).")
+
+    return piece
+end
+
+function selectpiece(env::QuartoEnv, player::Char, log::Bool=false)
+    if player == 'h'
+        piece = selectpiecehuman(env, log)
+    elseif player == 'r'
+        piece = selectpiecerandom(env, log)
+    elseif player == 'w'
+        piece = selectpiecerandom(env, log)
+    # elseif player == '3'
+    #     performminmaxaction(env, 3, log)
+    # elseif player == '2'
+    #     performminmaxaction(env, 2, log)
+    # elseif player == '1'
+    #     performminmaxaction(env, 1, log)
+    # else
+    #     #println("Unrecognized player type '$(player)'. Options are 'h', 'r', or 'w'. Using random player.")
+    #     performrandommove(env, log)
+    end
+
+    env.player = !env.player
+
+    return piece
 end
 
 function run(env::QuartoEnv, player1::Char, player2::Char, rendergame::Bool=false, logmove::Bool=false)
@@ -272,10 +303,13 @@ function run(env::QuartoEnv, player1::Char, player2::Char, rendergame::Bool=fals
 
     while !(isdraw(env) || iswin(env))
         if env.player
-            performaction(player1, env, logmove)
+            piece = selectpiece(env, player1, logmove)
+            performaction(player2, env, piece, logmove)
         else
-            performaction(player2, env, logmove)
+            piece = selectpiece(env, player2, logmove)
+            performaction(player1, env, piece, logmove)
         end
+        
         rendergame && render(env)
     end
 
@@ -283,7 +317,7 @@ function run(env::QuartoEnv, player1::Char, player2::Char, rendergame::Bool=fals
         logmove && println("It's a draw!")
         return 3
     else
-        logmove && println("Player '$(!env.player)' won the game!")
-        return env.player ? 2 : 1
+        logmove && println("Player '$(env.player)' won the game!")
+        return env.player ? 1 : 2
     end
 end
