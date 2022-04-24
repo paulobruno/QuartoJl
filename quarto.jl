@@ -158,7 +158,7 @@ function setaction!(env::QuartoEnv, a::Tuple{UInt8, UInt8, UInt8}, log::Bool=fal
     env.board[a[1], a[2]] = (0xf0 | (a[3] - 0x01))
     env.availablepositions[a[1], a[2]] = false
     env.availablepieces[a[3]] = false
-    log && println("Player '$(env.player)' placed piece $(a[3]) in ($(a[2]), $(a[1])) position.")
+    log && println("Player '$(env.player)' placed piece $(symbollut[a[3]]) in ($(a[2]), $(a[1])) position.")
 end
 
 function minmaxmove(env::QuartoEnv, depth::Integer)
