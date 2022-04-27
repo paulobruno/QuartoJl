@@ -82,12 +82,13 @@ function iswin(env::QuartoEnv)
 end
 
 function isdraw(env::QuartoEnv)
-    for p ∈ env.board
-        if (p < 0xf0)
-            return false
-        end
-    end
-    return !iswin(env)
+    b = env.board
+    a = (b[1,1] & b[2,1] & b[3,1] & b[4,1] &
+        b[1,2] & b[2,2] & b[3,2] & b[4,2] &
+        b[1,3] & b[2,3] & b[3,3] & b[4,3] &
+        b[1,4] & b[2,4] & b[3,4] & b[4,4])
+
+    return (a < 0xf0) ? false : !iswin(env)
 end
 
 function render(env::QuartoEnv)
