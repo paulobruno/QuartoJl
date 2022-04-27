@@ -148,73 +148,60 @@ end
 function setaction(env::QuartoEnv, a::Tuple{UInt8, UInt8, UInt8})
     copyenv = copy(env)
     copyenv.availablepositions[a[1], a[2]] = false
-    copyenv.availablepieces[a[3]] = false
     copyenv.board[a[1], a[2]] = (0xf0 | (a[3] - 0x01))
-    copyenv.player = !copyenv.player
     return copyenv
 end
 
 function setaction!(env::QuartoEnv, a::Tuple{UInt8, UInt8, UInt8}, log::Bool=false)
     env.board[a[1], a[2]] = (0xf0 | (a[3] - 0x01))
     env.availablepositions[a[1], a[2]] = false
-    env.availablepieces[a[3]] = false
     log && println("Player '$(env.player)' placed piece $(symbollut[a[3]]) in ($(a[2]), $(a[1])) position.")
 end
 
-function minmaxmove(env::QuartoEnv, depth::Integer)
-    if iswin(env)
-        return -2 * env.player + 1
-    elseif (depth == 0)  || isdraw(env)
-        return 0
+function minmaxpositions(env::QuartoEnv, piece::UInt8, depth::Integer)
+    positions = getavailablepositions(env)
+    numpositions = length(positions)
+
+    if (depth == 0) || (numpositions == 1)
+        return zeros(Int, numpositions)
     end
 
-    for a ∈ getavailablepieces(env)
-        for p ∈ getavailablepositions(env)
-            copyenv = setaction(env, (UInt8(p[1]), UInt8(p[2]), UInt8(a)))
-            result = minmaxmove(copyenv, depth-1)
-            # prune minmax
-            if env.player && result == 1
-                return 1
-            elseif !env.player && result == -1
-                return -1
+    positionvalues = Vector{Integer}(undef, numpositions)
+
+    for i in 1:numpositions
+        pos = getavailablepositions(env)[i]
+
+        copyenv = setaction(env, (UInt8(pos[1]), UInt8(pos[2]), UInt8(piece)))
+
+        if iswin(copyenv)
+            positionvalues[i] = 2 * env.player - 1
+        else
+            piecevalues = minmaxpieces(copyenv, depth-1)
+
+            if env.player
+                positionvalues[i] = maximum(piecevalues)
+            else
+                positionvalues[i] = minimum(piecevalues)
             end
         end
     end
 
-    return 0
+    return positionvalues
 end
 
-function performminmaxaction(env::QuartoEnv, depth::Integer, log::Bool=false)
-    if depth == 0
-        performrandommove(env, log)
-    end
-
-    outcomes = Vector{Integer}()
-
-    for a ∈ getavailablepieces(env)
-        for p ∈ getavailablepositions(env)
-            copyenv = setaction(env, (UInt8(p[1]), UInt8(p[2]), UInt8(a)))
-            push!(outcomes, minmaxmove(copyenv, depth-1))
-        end
-    end
-
-    bestactions = Vector{Integer}()
+function performminmaxaction(env::QuartoEnv, piece::UInt8, depth::Integer, log::Bool=false)
+    positionvalues = minmaxpositions(env, piece, depth)
 
     if env.player
-        bestactions = findall(outcomes .== maximum(outcomes))
+        bestpositions = findall(positionvalues .== maximum(positionvalues))
     else
-        bestactions = findall(outcomes .== minimum(outcomes))
+        bestpositions = findall(positionvalues .== minimum(positionvalues))
     end
 
-    move = rand(bestactions)
+    pos = rand(bestpositions)
+    pos = getavailablepositions(env)[pos]
 
-    a = div(move-1, length(getavailablepositions(env))) + 1
-    p = mod(move-1, length(getavailablepositions(env))) + 1
-
-    a = getavailablepieces(env)[a]
-    p = getavailablepositions(env)[p]
-
-    setaction!(env, (UInt8(p[1]), UInt8(p[2]), UInt8(a)), log)
+    setaction!(env, (UInt8(pos[1]), UInt8(pos[2]), UInt8(piece)), log)
 end
 
 function performrandommove(env::QuartoEnv, piece::UInt8, log::Bool=false)
@@ -241,6 +228,8 @@ function performaction(player::Char, env::QuartoEnv, piece::UInt8, log::Bool=fal
         performrandommove(env, piece, log)
     elseif player == 'w'
         performwinningmmove(env, piece, log)
+    elseif player == '4'
+        performminmaxaction(env, piece, 4, log)
     elseif player == '3'
         performminmaxaction(env, piece, 3, log)
     elseif player == '2'
@@ -255,7 +244,6 @@ end
 
 function selectpiecerandom(env::QuartoEnv, log::Bool=false)
     piece = UInt8(rand(getavailablepieces(env)))
-    log && println("Player '$(env.player)' selected piece $(symbollut[piece]).")
     return piece
 end
 
@@ -270,9 +258,52 @@ function selectpiecehuman(env::QuartoEnv, log::Bool=false)
 
     piece = UInt8(getavailablepieces(env)[choice])
 
-    log && println("Player '$(env.player)' selected piece $(symbollut[piece]).")
-
     return piece
+end
+
+function minmaxpieces(env::QuartoEnv, depth::Integer)
+    pieces = getavailablepieces(env)
+    numpieces = length(pieces)
+    
+    if (depth == 0) || (numpieces == 1)
+        return zeros(Integer, numpieces)
+    end
+
+    piecevalues = Vector{Integer}(undef, numpieces)
+    
+    for i ∈ 1:numpieces
+        piece = UInt8(pieces[i])
+
+        env.availablepieces[piece] = false
+        env.player = !env.player
+
+        positionvalues = minmaxpositions(env, piece, depth)
+
+        env.player = !env.player
+        env.availablepieces[piece] = true
+
+        if env.player
+            piecevalues[i] = minimum(positionvalues)
+        else
+            piecevalues[i] = maximum(positionvalues)
+        end
+    end
+
+    return piecevalues
+end
+
+function selectpieceminmax(env::QuartoEnv, depth::Integer, log::Bool=false)
+    piecevalues = minmaxpieces(env, depth)
+
+    if env.player
+        bestpieces = findall(piecevalues .== maximum(piecevalues))
+    else
+        bestpieces = findall(piecevalues .== minimum(piecevalues))
+    end
+
+    p = rand(bestpieces)
+
+    return UInt8(getavailablepieces(env)[p])
 end
 
 function selectpiece(env::QuartoEnv, player::Char, log::Bool=false)
@@ -282,17 +313,22 @@ function selectpiece(env::QuartoEnv, player::Char, log::Bool=false)
         piece = selectpiecerandom(env, log)
     elseif player == 'w'
         piece = selectpiecerandom(env, log)
-    # elseif player == '3'
-    #     performminmaxaction(env, 3, log)
-    # elseif player == '2'
-    #     performminmaxaction(env, 2, log)
-    # elseif player == '1'
-    #     performminmaxaction(env, 1, log)
-    # else
-    #     #println("Unrecognized player type '$(player)'. Options are 'h', 'r', or 'w'. Using random player.")
-    #     performrandommove(env, log)
+    elseif player == '4'
+        piece = selectpieceminmax(env, 4, log)
+    elseif player == '3'
+        piece = selectpieceminmax(env, 3, log)
+    elseif player == '2'
+        piece = selectpieceminmax(env, 2, log)
+    elseif player == '1'
+        piece = selectpieceminmax(env, 1, log)
+    else
+        #println("Unrecognized player type '$(player)'. Options are 'h', 'r', or 'w'. Using random player.")
+        performrandommove(env, log)
     end
 
+    log && println("Player '$(env.player)' selected piece $(symbollut[piece]).")
+
+    env.availablepieces[piece] = false
     env.player = !env.player
 
     return piece
