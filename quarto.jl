@@ -57,24 +57,28 @@ function reset!(env::QuartoEnv)
     env.player = true
 end
 
-function iswin(line::SubArray{UInt8})
-    cond1 = (line[1] & line[2] & line[3] & line[4]) > 0xf0
-    cond2 = (!line[1] & !line[2] & !line[3] & !line[4]) > 0xf0
-    return cond1 || cond2
-end
-
 function iswin(env::QuartoEnv)
     b = env.board
-    return iswin(@view b[:,1]) ||
-           iswin(@view b[:,2]) ||
-           iswin(@view b[:,3]) ||
-           iswin(@view b[:,4]) ||
-           iswin(@view b[1,:]) ||
-           iswin(@view b[2,:]) ||
-           iswin(@view b[3,:]) ||
-           iswin(@view b[4,:]) ||
-           iswin(@view b[1:5:16]) ||
-           iswin(@view b[4:3:13])
+    return ((b[1,1] & b[1,2] & b[1,3] & b[1,4]) > 0xf0) ||
+        ((b[2,1] & b[2,2] & b[2,3] & b[2,4]) > 0xf0) ||
+        ((b[3,1] & b[3,2] & b[3,3] & b[3,4]) > 0xf0) ||
+        ((b[4,1] & b[4,2] & b[4,3] & b[4,4]) > 0xf0) ||
+        ((b[1,1] & b[2,1] & b[3,1] & b[4,1]) > 0xf0) ||
+        ((b[1,2] & b[2,2] & b[3,2] & b[4,2]) > 0xf0) ||
+        ((b[1,3] & b[2,3] & b[3,3] & b[4,3]) > 0xf0) ||
+        ((b[1,4] & b[2,4] & b[3,4] & b[4,4]) > 0xf0) ||
+        ((b[1,1] & b[2,2] & b[3,3] & b[4,4]) > 0xf0) ||
+        ((b[1,4] & b[2,3] & b[3,2] & b[4,1]) > 0xf0) ||
+        ((!b[1,1] & !b[1,2] & !b[1,3] & !b[1,4]) > 0xf0) ||
+        ((!b[2,1] & !b[2,2] & !b[2,3] & !b[2,4]) > 0xf0) ||
+        ((!b[3,1] & !b[3,2] & !b[3,3] & !b[3,4]) > 0xf0) ||
+        ((!b[4,1] & !b[4,2] & !b[4,3] & !b[4,4]) > 0xf0) ||
+        ((!b[1,1] & !b[2,1] & !b[3,1] & !b[4,1]) > 0xf0) ||
+        ((!b[1,2] & !b[2,2] & !b[3,2] & !b[4,2]) > 0xf0) ||
+        ((!b[1,3] & !b[2,3] & !b[3,3] & !b[4,3]) > 0xf0) ||
+        ((!b[1,4] & !b[2,4] & !b[3,4] & !b[4,4]) > 0xf0) ||
+        ((!b[1,1] & !b[2,2] & !b[3,3] & !b[4,4]) > 0xf0) ||
+        ((!b[1,4] & !b[2,3] & !b[3,2] & !b[4,1]) > 0xf0)
 end
 
 function isdraw(env::QuartoEnv)
