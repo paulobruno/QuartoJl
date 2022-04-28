@@ -326,26 +326,26 @@ function selectpiece(env::QuartoEnv, player::MinMaxPlayer, log::Bool=false)
 end
 
 
-function run(env::QuartoEnv, player1::Player, player2::Player, rendergame::Bool=false, logmove::Bool=false)
+function run(env::QuartoEnv, player1::Player, player2::Player; rendergame::Bool=false, logmoves::Bool=false)
     rendergame && render(env)
 
     while !(isdraw(env) || iswin(env))
         if env.player
-            piece = selectpiece(env, player1, logmove)
-            performaction(player2, env, piece, logmove)
+            piece = selectpiece(env, player1, logmoves)
+            performaction(player2, env, piece, logmoves)
         else
-            piece = selectpiece(env, player2, logmove)
-            performaction(player1, env, piece, logmove)
+            piece = selectpiece(env, player2, logmoves)
+            performaction(player1, env, piece, logmoves)
         end
         
         rendergame && render(env)
     end
 
     if isdraw(env)
-        logmove && println("It's a draw!")
+        logmoves && println("It's a draw!")
         return 3
     else
-        logmove && println("Player '$(env.player)' won the game!")
+        logmoves && println("Player '$(env.player)' won the game!")
         return env.player ? 1 : 2
     end
 end

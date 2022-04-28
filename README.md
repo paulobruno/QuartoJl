@@ -13,7 +13,7 @@ include("quarto.jl")
 
 env = QuartoEnv()
 
-run(env, HumanPlayer(), RandomPlayer(), true, true)
+run(env, HumanPlayer(), RandomPlayer(), rendergame=true, logmoves=true)
 ```
 
 ## Available opponents
