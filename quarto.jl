@@ -71,7 +71,7 @@ function iswin(env::QuartoEnv)
 end
 
 function isdraw(env::QuartoEnv)
-    return all(≥(0xf0), env.board) && !iswin(env)
+    return env.numpieces == 0 && !iswin(env)
 end
 
 function render(env::QuartoEnv)
