@@ -118,9 +118,15 @@ function getaction(env::QuartoEnv)
         else
             break
         end
-    end 
-    
-    return (col-0x01) * 0x04 + row
+    end
+
+    positionvalue = (col-0x01) * 0x04 + row
+
+    for i ∈ 0x01:env.numpositions
+        if env.availablepositions[i] == positionvalue
+            return i
+        end
+    end
 end
 
 function setaction(env::QuartoEnv, positionidx::UInt8, pieceidx::UInt8)
