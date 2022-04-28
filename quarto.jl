@@ -128,14 +128,14 @@ function setaction(env::QuartoEnv, positionidx::UInt8, pieceidx::UInt8)
     
     position = copyenv.availablepositions[positionidx]
     copyenv.availablepositions[positionidx] = copyenv.availablepositions[copyenv.numpositions]
-    copyenv.numpositions = copyenv.numpositions - 1
+    copyenv.numpositions -= 0x01
 
-    row = mod(position-1, 4) + 1
-    col = div(position-1, 4) + 1
+    row = mod(position-0x01, 0x04) + 0x01
+    col = div(position-0x01, 0x04) + 0x01
 
     piece = copyenv.availablepieces[pieceidx]
     copyenv.availablepieces[pieceidx] = copyenv.availablepieces[copyenv.numpieces]
-    copyenv.numpieces = copyenv.numpieces - 1
+    copyenv.numpieces -= 0x01
 
     copyenv.board[col, row] = (0xf0 | (piece - 0x01))
 
@@ -145,14 +145,14 @@ end
 function setaction!(env::QuartoEnv, positionidx::UInt8, pieceidx::UInt8, log::Bool=false)
     position = env.availablepositions[positionidx]
     env.availablepositions[positionidx] = env.availablepositions[env.numpositions]
-    env.numpositions = env.numpositions - 1
+    env.numpositions -= 0x01
 
-    row = mod(position-1, 4) + 1
-    col = div(position-1, 4) + 1
+    row = mod(position-0x01, 0x04) + 0x01
+    col = div(position-0x01, 0x04) + 0x01
 
     piece = env.availablepieces[pieceidx]
     env.availablepieces[pieceidx] = env.availablepieces[env.numpieces]
-    env.numpieces = env.numpieces - 1
+    env.numpieces -= 0x01
 
     env.board[col, row] = (0xf0 | (piece - 0x01))
 
@@ -162,7 +162,7 @@ end
 function minmaxpositions(env::QuartoEnv, pieceidx::UInt8, depth::Integer)
     numpositions = env.numpositions
 
-    if (depth == 0) || (numpositions == 1)
+    if (depth == 0) || (numpositions == 0x01)
         return zeros(Integer, numpositions)
     end
 
@@ -253,7 +253,7 @@ end
 function minmaxpieces(env::QuartoEnv, depth::Integer)
     numpieces = env.numpieces
     
-    if (depth == 0) || (numpieces == 1)
+    if (depth == 0) || (numpieces == 0x01)
         return zeros(Integer, numpieces)
     end
 
