@@ -98,18 +98,8 @@ function render(env::QuartoEnv)
     println()
 end
 
-function showavailablepieces(env::QuartoEnv)
-    for i ∈ 1:length(env.availablepieces)
-        env.availablepieces[i] && println("\t$(i): ", symbollut[i])
-    end
-end
-
 function getavailablepieces(env::QuartoEnv)
     return env.availablepieces[0x01:env.numpieces]
-end
-
-function getavailablepositions(env::QuartoEnv)
-    return env.availablepositions[0x01:env.numpositions]
 end
 
 function getaction(env::QuartoEnv)
@@ -264,7 +254,7 @@ function selectpiecerandom(env::QuartoEnv, log::Bool=false)
 end
 
 function selectpiecehuman(env::QuartoEnv, log::Bool=false)
-    menu = RadioMenu([symbollut[i] for i in getavailablepieces(env)], pagesize=5)
+    menu = RadioMenu([symbollut[i] for i ∈ getavailablepieces(env)], pagesize=5)
     
     choice = -1
 
