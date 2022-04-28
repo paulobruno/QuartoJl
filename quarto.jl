@@ -1,5 +1,3 @@
-using LinearAlgebra
-
 import REPL
 using REPL.TerminalMenus
 
