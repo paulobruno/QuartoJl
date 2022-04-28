@@ -4,24 +4,11 @@ import REPL
 using REPL.TerminalMenus
 
 
-symbollut = [
-    "\e[31m↔\u001b[0m", 
-    "\e[31m—\u001b[0m",
-    "\e[31m↕\u001b[0m",
-    "\e[31m|\u001b[0m",
-    "\e[31m⇆\u001b[0m",
-    "\e[31m=\u001b[0m",
-    "\e[31m⇅\u001b[0m",
-    "\e[31m‖\u001b[0m",
-    "\e[36m↔\u001b[0m",
-    "\e[36m—\u001b[0m",
-    "\e[36m↕\u001b[0m",
-    "\e[36m|\u001b[0m",
-    "\e[36m⇆\u001b[0m",
-    "\e[36m=\u001b[0m",
-    "\e[36m⇅\u001b[0m",
-    "\e[36m‖\u001b[0m"
-]
+red(c::Char) = string("\e[31m", c, "\u001b[0m")
+blue(c::Char) = string("\e[36m", c, "\u001b[0m")
+
+symbollut = (red('↔'),  red('—'),  red('↕'),  red('|'),  red('⇆'),  red('='),  red('⇅'),  red('‖'),
+            blue('↔'), blue('—'), blue('↕'), blue('|'), blue('⇆'), blue('='), blue('⇅'), blue('‖'))
 
 
 Base.:!(b::UInt8) = ~(b ⊻ 0xf0)
