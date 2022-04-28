@@ -125,20 +125,7 @@ end
 
 function setaction(env::QuartoEnv, positionidx::UInt8, pieceidx::UInt8)
     copyenv = copy(env)
-    
-    position = copyenv.availablepositions[positionidx]
-    copyenv.availablepositions[positionidx] = copyenv.availablepositions[copyenv.numpositions]
-    copyenv.numpositions -= 0x01
-
-    row = mod(position-0x01, 0x04) + 0x01
-    col = div(position-0x01, 0x04) + 0x01
-
-    piece = copyenv.availablepieces[pieceidx]
-    copyenv.availablepieces[pieceidx] = copyenv.availablepieces[copyenv.numpieces]
-    copyenv.numpieces -= 0x01
-
-    copyenv.board[col, row] = (0xf0 | (piece - 0x01))
-
+    setaction!(copyenv, positionidx, pieceidx, false)
     return copyenv
 end
 
