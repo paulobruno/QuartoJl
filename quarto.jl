@@ -4,6 +4,16 @@ import REPL
 using REPL.TerminalMenus
 
 
+struct RandomPlayer end
+struct HumanPlayer end
+struct WinningMovePlayer end
+struct MinMaxPlayer
+    depth::Integer
+end
+
+Player = Union{HumanPlayer, RandomPlayer, WinningMovePlayer, MinMaxPlayer}
+
+
 red(c::Char) = string("\e[31m", c, "\u001b[0m")
 blue(c::Char) = string("\e[36m", c, "\u001b[0m")
 
@@ -227,26 +237,21 @@ function performwinningmmove(env::QuartoEnv, pieceidx::UInt8, log::Bool=false)
     performrandommove(env, pieceidx, log)
 end
 
-function performaction(player::Char, env::QuartoEnv, piece::UInt8, log::Bool=false)
-    if player == 'h'
-        a = getaction(env)
-        setaction!(env, a, piece, log)
-    elseif player == 'r'
-        performrandommove(env, piece, log)
-    elseif player == 'w'
-        performwinningmmove(env, piece, log)
-    elseif player == '4'
-        performminmaxaction(env, piece, 4, log)
-    elseif player == '3'
-        performminmaxaction(env, piece, 3, log)
-    elseif player == '2'
-        performminmaxaction(env, piece, 2, log)
-    elseif player == '1'
-        performminmaxaction(env, piece, 1, log)
-    else
-        #println("Unrecognized player type '$(player)'. Options are 'h', 'r', or 'w'. Using random player.")
-        performrandommove(env, log)
-    end
+function performaction(player::HumanPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)
+    positionidx = getaction(env)
+    setaction!(env, positionidx, pieceidx, log)
+end
+
+function performaction(player::RandomPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)
+    performrandommove(env, pieceidx, log)
+end
+
+function performaction(player::WinningMovePlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)
+    performwinningmmove(env, pieceidx, log)
+end
+
+function performaction(player::MinMaxPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)
+    performminmaxaction(env, pieceidx, player.depth, log)
 end
 
 function selectpiecerandom(env::QuartoEnv, log::Bool=false)
@@ -305,35 +310,36 @@ function selectpieceminmax(env::QuartoEnv, depth::Integer, log::Bool=false)
     return UInt8(p)
 end
 
-function selectpiece(env::QuartoEnv, player::Char, log::Bool=false)
-    if player == 'h'
-        piece = selectpiecehuman(env, log)
-    elseif player == 'r'
-        piece = selectpiecerandom(env, log)
-    elseif player == 'w'
-        piece = selectpiecerandom(env, log)
-    elseif player == '4'
-        piece = selectpieceminmax(env, 4, log)
-    elseif player == '3'
-        piece = selectpieceminmax(env, 3, log)
-    elseif player == '2'
-        piece = selectpieceminmax(env, 2, log)
-    elseif player == '1'
-        piece = selectpieceminmax(env, 1, log)
-    else
-        #println("Unrecognized player type '$(player)'. Options are 'h', 'r', or 'w'. Using random player.")
-        performrandommove(env, log)
-    end
-
-    actualpiece = env.availablepieces[piece]
+function setpiece(env::QuartoEnv, pieceidx::UInt8, log::Bool=false)
+    actualpiece = env.availablepieces[pieceidx]
     log && println("Player '$(env.player)' selected piece $(symbollut[actualpiece]).")
 
     env.player = !env.player
 
-    return piece
+    return pieceidx
 end
 
-function run(env::QuartoEnv, player1::Char, player2::Char, rendergame::Bool=false, logmove::Bool=false)
+function selectpiece(env::QuartoEnv, player::HumanPlayer, log::Bool=false)
+    pieceidx = selectpiecehuman(env, log)
+    return setpiece(env, pieceidx, log)
+end
+
+function selectpiece(env::QuartoEnv, player::RandomPlayer, log::Bool=false)
+    pieceidx = selectpiecerandom(env, log)
+    return setpiece(env, pieceidx, log)
+end
+
+function selectpiece(env::QuartoEnv, player::WinningMovePlayer, log::Bool=false)
+    pieceidx = selectpiecerandom(env, log)
+    return setpiece(env, pieceidx, log)
+end
+
+function selectpiece(env::QuartoEnv, player::MinMaxPlayer, log::Bool=false)
+    pieceidx = selectpieceminmax(env, player.depth, log)
+    return setpiece(env, pieceidx, log)
+end
+
+function run(env::QuartoEnv, player1::Player, player2::Player, rendergame::Bool=false, logmove::Bool=false)
     rendergame && render(env)
 
     while !(isdraw(env) || iswin(env))

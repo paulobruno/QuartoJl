@@ -7,7 +7,7 @@ env = QuartoEnv()
 
 for i ∈ 1:1000
     reset!(env)
-    winner = run(env, 'w', 'r', false, false)
+    winner = run(env, RandomPlayer(), RandomPlayer(), false, false)
     winnercount[winner] += 1
 end
 
