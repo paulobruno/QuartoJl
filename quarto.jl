@@ -34,14 +34,14 @@ mutable struct QuartoEnv
 end
 
 
-function QuartoEnv()
+function QuartoEnv()::QuartoEnv
     board = fill(0x00, 4, 4)
     pieces = UInt8.(1:16)
     positions = UInt8.(1:16)
     QuartoEnv(board, pieces, positions, 0x10, 0x10, true)
 end
 
-function copy(env::QuartoEnv)
+function copy(env::QuartoEnv)::QuartoEnv
     return QuartoEnv(Base.copy(env.board), 
                      Base.copy(env.availablepieces),
                      Base.copy(env.availablepositions),
@@ -50,17 +50,18 @@ function copy(env::QuartoEnv)
                      Base.copy(env.player))
 end
 
-function reset!(env::QuartoEnv)
+function reset!(env::QuartoEnv)::Nothing
     fill!(env.board, 0x00)
     env.availablepieces = UInt8.(1:16)
     env.availablepositions = UInt8.(1:16)
     env.numpieces = 0x10
     env.numpositions = 0x10
     env.player = true
+    nothing
 end
 
 
-function iswin(env::QuartoEnv)
+function iswin(env::QuartoEnv)::Bool
     f(p1, p2, p3, p4) = (p1 & p2 & p3 & p4 ≥ 0xf0) && ((p1 ⊻ p2) | (p2 ⊻ p3) | (p3 ⊻ p4) < 0x0f)
     b = env.board
     return f(b[1,1], b[2,1], b[3,1], b[4,1]) ||
@@ -75,12 +76,12 @@ function iswin(env::QuartoEnv)
            f(b[1,4], b[2,3], b[3,2], b[4,1])
 end
 
-function isdraw(env::QuartoEnv)
+function isdraw(env::QuartoEnv)::Bool
     return env.numpieces == 0 && !iswin(env)
 end
 
 
-function render(env::QuartoEnv)
+function render(env::QuartoEnv)::Nothing
     for j ∈ 1:4
         for i ∈ 1:4
             if (0x0f < env.board[i, j])
@@ -95,18 +96,18 @@ function render(env::QuartoEnv)
 end
 
 
-function getavailablepieces(env::QuartoEnv)
+function getavailablepieces(env::QuartoEnv)::Vector{UInt8}
     return env.availablepieces[0x01:env.numpieces]
 end
 
 
-function setaction(env::QuartoEnv, positionidx::UInt8, pieceidx::UInt8)
+function setaction(env::QuartoEnv, positionidx::UInt8, pieceidx::UInt8)::QuartoEnv
     copyenv = copy(env)
     setaction!(copyenv, positionidx, pieceidx, false)
     return copyenv
 end
 
-function setaction!(env::QuartoEnv, positionidx::UInt8, pieceidx::UInt8, log::Bool=false)
+function setaction!(env::QuartoEnv, positionidx::UInt8, pieceidx::UInt8, log::Bool=false)::Nothing
     position = env.availablepositions[positionidx]
     env.availablepositions[positionidx] = env.availablepositions[env.numpositions]
     env.numpositions -= 0x01
@@ -121,10 +122,11 @@ function setaction!(env::QuartoEnv, positionidx::UInt8, pieceidx::UInt8, log::Bo
     env.board[col, row] = (0xf0 | (piece - 0x01))
 
     log && println("Player '$(env.player)' placed piece $(symbollut[piece]) in ($(row), $(col)) position.")
+    nothing
 end
 
 
-function getaction(env::QuartoEnv)
+function getaction(env::QuartoEnv)::UInt8
     row = 0
     col = 0
     
@@ -161,7 +163,7 @@ function getaction(env::QuartoEnv)
     end
 end
 
-function minmaxpositions(env::QuartoEnv, pieceidx::UInt8, depth::Integer)
+function minmaxpositions(env::QuartoEnv, pieceidx::UInt8, depth::Integer)::Vector{Integer}
     numpositions = env.numpositions
 
     if (depth == 0) || (numpositions == 0x01)
@@ -189,7 +191,7 @@ function minmaxpositions(env::QuartoEnv, pieceidx::UInt8, depth::Integer)
     return positionvalues
 end
 
-function performminmaxaction(env::QuartoEnv, pieceidx::UInt8, depth::Integer, log::Bool=false)
+function performminmaxaction(env::QuartoEnv, pieceidx::UInt8, depth::Integer, log::Bool=false)::Nothing
     positionvalues = minmaxpositions(env, pieceidx, depth)
 
     if env.player
@@ -203,12 +205,12 @@ function performminmaxaction(env::QuartoEnv, pieceidx::UInt8, depth::Integer, lo
     setaction!(env, pos, pieceidx, log)
 end
 
-function performrandommove(env::QuartoEnv, pieceidx::UInt8, log::Bool=false)
+function performrandommove(env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::Nothing
     idx = rand(0x01:env.numpositions)
     setaction!(env, idx, pieceidx, log)
 end
 
-function performwinningmmove(env::QuartoEnv, pieceidx::UInt8, log::Bool=false)
+function performwinningmmove(env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::Nothing
     for i ∈ 0x01:env.numpositions
         copyenv = setaction(env, i, pieceidx)
         if iswin(copyenv)
@@ -220,29 +222,29 @@ function performwinningmmove(env::QuartoEnv, pieceidx::UInt8, log::Bool=false)
 end
 
 
-function performaction(player::HumanPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)
+function performaction(player::HumanPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::Nothing
     positionidx = getaction(env)
     setaction!(env, positionidx, pieceidx, log)
 end
 
-function performaction(player::RandomPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)
+function performaction(player::RandomPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::Nothing
     performrandommove(env, pieceidx, log)
 end
 
-function performaction(player::WinningMovePlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)
+function performaction(player::WinningMovePlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::Nothing
     performwinningmmove(env, pieceidx, log)
 end
 
-function performaction(player::MinMaxPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)
+function performaction(player::MinMaxPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::Nothing
     performminmaxaction(env, pieceidx, player.depth, log)
 end
 
 
-function selectpiecerandom(env::QuartoEnv)
+function selectpiecerandom(env::QuartoEnv)::UInt8
     return rand(0x01:env.numpieces)
 end
 
-function selectpiecehuman(env::QuartoEnv)
+function selectpiecehuman(env::QuartoEnv)::UInt8
     menu = RadioMenu([symbollut[i] for i ∈ getavailablepieces(env)], pagesize=5)
     
     choice = -1
@@ -254,7 +256,7 @@ function selectpiecehuman(env::QuartoEnv)
     return UInt8(choice)
 end
 
-function minmaxpieces(env::QuartoEnv, depth::Integer)
+function minmaxpieces(env::QuartoEnv, depth::Integer)::Vector{Integer}
     numpieces = env.numpieces
     
     if (depth == 0) || (numpieces == 0x01)
@@ -280,7 +282,7 @@ function minmaxpieces(env::QuartoEnv, depth::Integer)
     return piecevalues
 end
 
-function selectpieceminmax(env::QuartoEnv, depth::Integer)
+function selectpieceminmax(env::QuartoEnv, depth::Integer)::UInt8
     piecevalues = minmaxpieces(env, depth)
 
     if env.player
@@ -295,7 +297,7 @@ function selectpieceminmax(env::QuartoEnv, depth::Integer)
 end
 
 
-function setpiece(env::QuartoEnv, pieceidx::UInt8, log::Bool=false)
+function setpiece(env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::UInt8
     actualpiece = env.availablepieces[pieceidx]
     log && println("Player '$(env.player)' selected piece $(symbollut[actualpiece]).")
 
@@ -305,28 +307,28 @@ function setpiece(env::QuartoEnv, pieceidx::UInt8, log::Bool=false)
 end
 
 
-function selectpiece(env::QuartoEnv, player::HumanPlayer, log::Bool=false)
+function selectpiece(env::QuartoEnv, player::HumanPlayer, log::Bool=false)::UInt8
     pieceidx = selectpiecehuman(env)
     return setpiece(env, pieceidx, log)
 end
 
-function selectpiece(env::QuartoEnv, player::RandomPlayer, log::Bool=false)
+function selectpiece(env::QuartoEnv, player::RandomPlayer, log::Bool=false)::UInt8
     pieceidx = selectpiecerandom(env)
     return setpiece(env, pieceidx, log)
 end
 
-function selectpiece(env::QuartoEnv, player::WinningMovePlayer, log::Bool=false)
+function selectpiece(env::QuartoEnv, player::WinningMovePlayer, log::Bool=false)::UInt8
     pieceidx = selectpiecerandom(env)
     return setpiece(env, pieceidx, log)
 end
 
-function selectpiece(env::QuartoEnv, player::MinMaxPlayer, log::Bool=false)
+function selectpiece(env::QuartoEnv, player::MinMaxPlayer, log::Bool=false)::UInt8
     pieceidx = selectpieceminmax(env, player.depth)
     return setpiece(env, pieceidx, log)
 end
 
 
-function run(env::QuartoEnv, player1::Player, player2::Player; rendergame::Bool=false, logmoves::Bool=false)
+function run(env::QuartoEnv, player1::Player, player2::Player; rendergame::Bool=false, logmoves::Bool=false)::Integer
     rendergame && render(env)
 
     while !(isdraw(env) || iswin(env))
