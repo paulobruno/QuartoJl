@@ -259,8 +259,16 @@ end
 function minmaxpieces(env::QuartoEnv, depth::Integer)::Vector{Integer}
     numpieces = env.numpieces
     
-    if (depth == 0) || (numpieces == 0x01)
+    if (depth == 0)
         return zeros(Integer, numpieces)
+    end
+
+    if (numpieces == 0x01)
+        copyenv = setaction(env, env.availablepositions[1], env.availablepieces[1])
+        if iswin(copyenv)
+            return Integer.([-2 * env.player + 1])
+        end
+        return zeros(Integer, 1)
     end
 
     piecevalues = Vector{Integer}(undef, numpieces)
