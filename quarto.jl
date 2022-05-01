@@ -5,7 +5,7 @@ using REPL.TerminalMenus
 struct RandomPlayer end
 struct HumanPlayer end
 struct WinningMovePlayer end
-struct MinMaxPlayer
+struct MiniMaxPlayer
     depth::Integer
 end
 
@@ -13,7 +13,7 @@ Player = Union{
     HumanPlayer, 
     RandomPlayer, 
     WinningMovePlayer, 
-    MinMaxPlayer
+    MiniMaxPlayer
 }
 
 
@@ -163,7 +163,7 @@ function getaction(env::QuartoEnv)::UInt8
     end
 end
 
-function minmaxpositions(env::QuartoEnv, pieceidx::UInt8, depth::Integer)::Vector{Integer}
+function minimaxpositions(env::QuartoEnv, pieceidx::UInt8, depth::Integer)::Vector{Integer}
     numpositions = env.numpositions
 
     if (depth == 0) || (numpositions == 0x01)
@@ -178,7 +178,7 @@ function minmaxpositions(env::QuartoEnv, pieceidx::UInt8, depth::Integer)::Vecto
         if iswin(copyenv)
             positionvalues[i] = 2 * env.player - 1
         else
-            piecevalues = minmaxpieces(copyenv, depth-1)
+            piecevalues = minimaxpieces(copyenv, depth-1)
 
             if env.player
                 positionvalues[i] = maximum(piecevalues)
@@ -191,8 +191,8 @@ function minmaxpositions(env::QuartoEnv, pieceidx::UInt8, depth::Integer)::Vecto
     return positionvalues
 end
 
-function performminmaxaction(env::QuartoEnv, pieceidx::UInt8, depth::Integer, log::Bool=false)::Nothing
-    positionvalues = minmaxpositions(env, pieceidx, depth)
+function performminimaxaction(env::QuartoEnv, pieceidx::UInt8, depth::Integer, log::Bool=false)::Nothing
+    positionvalues = minimaxpositions(env, pieceidx, depth)
 
     if env.player
         bestpositions = findall(positionvalues .== maximum(positionvalues))
@@ -235,8 +235,8 @@ function performaction(player::WinningMovePlayer, env::QuartoEnv, pieceidx::UInt
     performwinningmmove(env, pieceidx, log)
 end
 
-function performaction(player::MinMaxPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::Nothing
-    performminmaxaction(env, pieceidx, player.depth, log)
+function performaction(player::MiniMaxPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::Nothing
+    performminimaxaction(env, pieceidx, player.depth, log)
 end
 
 
@@ -256,7 +256,7 @@ function selectpiecehuman(env::QuartoEnv)::UInt8
     return UInt8(choice)
 end
 
-function minmaxpieces(env::QuartoEnv, depth::Integer)::Vector{Integer}
+function minimaxpieces(env::QuartoEnv, depth::Integer)::Vector{Integer}
     numpieces = env.numpieces
     
     if (depth == 0)
@@ -276,7 +276,7 @@ function minmaxpieces(env::QuartoEnv, depth::Integer)::Vector{Integer}
     for i ∈ 0x01:numpieces
         env.player = !env.player
 
-        positionvalues = minmaxpositions(env, i, depth)
+        positionvalues = minimaxpositions(env, i, depth)
 
         env.player = !env.player
 
@@ -290,8 +290,8 @@ function minmaxpieces(env::QuartoEnv, depth::Integer)::Vector{Integer}
     return piecevalues
 end
 
-function selectpieceminmax(env::QuartoEnv, depth::Integer)::UInt8
-    piecevalues = minmaxpieces(env, depth)
+function selectpieceminimax(env::QuartoEnv, depth::Integer)::UInt8
+    piecevalues = minimaxpieces(env, depth)
 
     if env.player
         bestpieces = findall(piecevalues .== maximum(piecevalues))
@@ -330,8 +330,8 @@ function selectpiece(env::QuartoEnv, player::WinningMovePlayer, log::Bool=false)
     return setpiece(env, pieceidx, log)
 end
 
-function selectpiece(env::QuartoEnv, player::MinMaxPlayer, log::Bool=false)::UInt8
-    pieceidx = selectpieceminmax(env, player.depth)
+function selectpiece(env::QuartoEnv, player::MiniMaxPlayer, log::Bool=false)::UInt8
+    pieceidx = selectpieceminimax(env, player.depth)
     return setpiece(env, pieceidx, log)
 end
 
