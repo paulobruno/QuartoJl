@@ -17,11 +17,11 @@ Player = Union{
 }
 
 
-red(c::Char) = string("\e[31m", c, "\u001b[0m")
-blue(c::Char) = string("\e[36m", c, "\u001b[0m")
+@inline red(c::Char) = string("\e[31m", c, "\u001b[0m")
+@inline blue(c::Char) = string("\e[36m", c, "\u001b[0m")
 
-symbollut = (red('↔'),  red('—'),  red('↕'),  red('|'),  red('⇆'),  red('='),  red('⇅'),  red('‖'),
-            blue('↔'), blue('—'), blue('↕'), blue('|'), blue('⇆'), blue('='), blue('⇅'), blue('‖'))
+const symbollut = (red('↔'),  red('—'),  red('↕'),  red('|'),  red('⇆'),  red('='),  red('⇅'),  red('‖'),
+                  blue('↔'), blue('—'), blue('↕'), blue('|'), blue('⇆'), blue('='), blue('⇅'), blue('‖'))
 
 
 mutable struct QuartoEnv
