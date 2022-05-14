@@ -1,3 +1,15 @@
+# Manifest file
+Manifest.toml
+
+# Tests
+*.jl.cov
+*.jl.*.cov
+
+# Memory allocation
+*.jl.mem
+*.jl.*.mem
+
+
 # Commit message
 [Nn]otes.txt
 [Cc]ommit[Mm]essage*
@@ -9,5 +21,3 @@
 *~
 *.[Tt]emp
 [Tt]emp*
-[Tt]est*
-
