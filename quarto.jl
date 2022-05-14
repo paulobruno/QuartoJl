@@ -50,14 +50,14 @@ function copy(env::QuartoEnv)::QuartoEnv
                      Base.copy(env.player))
 end
 
-function reset!(env::QuartoEnv)::Nothing
+function reset!(env::QuartoEnv)::QuartoEnv
     fill!(env.board, 0x00)
     env.availablepieces = UInt8.(1:16)
     env.availablepositions = UInt8.(1:16)
     env.numpieces = 0x10
     env.numpositions = 0x10
     env.player = true
-    nothing
+    return env
 end
 
 
@@ -107,7 +107,7 @@ function setaction(env::QuartoEnv, positionidx::UInt8, pieceidx::UInt8)::QuartoE
     return copyenv
 end
 
-function setaction!(env::QuartoEnv, positionidx::UInt8, pieceidx::UInt8, log::Bool=false)::Nothing
+function setaction!(env::QuartoEnv, positionidx::UInt8, pieceidx::UInt8, log::Bool=false)::QuartoEnv
     position = env.availablepositions[positionidx]
     env.availablepositions[positionidx] = env.availablepositions[env.numpositions]
     env.numpositions -= 0x01
@@ -122,7 +122,8 @@ function setaction!(env::QuartoEnv, positionidx::UInt8, pieceidx::UInt8, log::Bo
     env.board[col, row] = (0xf0 | (piece - 0x01))
 
     log && println("Player '$(env.player)' placed piece $(symbollut[piece]) in ($(row), $(col)) position.")
-    nothing
+    
+    return env
 end
 
 
@@ -191,7 +192,7 @@ function minimaxpositions(env::QuartoEnv, pieceidx::UInt8, depth::Integer)::Vect
     return positionvalues
 end
 
-function performminimaxaction(env::QuartoEnv, pieceidx::UInt8, depth::Integer, log::Bool=false)::Nothing
+function performminimaxaction!(env::QuartoEnv, pieceidx::UInt8, depth::Integer, log::Bool=false)::QuartoEnv
     positionvalues = minimaxpositions(env, pieceidx, depth)
 
     if env.player
@@ -205,38 +206,37 @@ function performminimaxaction(env::QuartoEnv, pieceidx::UInt8, depth::Integer, l
     setaction!(env, pos, pieceidx, log)
 end
 
-function performrandommove(env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::Nothing
+function performrandommove!(env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::QuartoEnv
     idx = rand(0x01:env.numpositions)
     setaction!(env, idx, pieceidx, log)
 end
 
-function performwinningmmove(env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::Nothing
+function performwinningmmove!(env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::QuartoEnv
     for i ∈ 0x01:env.numpositions
         copyenv = setaction(env, i, pieceidx)
         if iswin(copyenv)
-            setaction!(env, i, pieceidx, log)
-            return
+            return setaction!(env, i, pieceidx, log)
         end
     end
-    performrandommove(env, pieceidx, log)
+    performrandommove!(env, pieceidx, log)
 end
 
 
-function performaction(player::HumanPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::Nothing
+function performaction!(player::HumanPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::QuartoEnv
     positionidx = getaction(env)
     setaction!(env, positionidx, pieceidx, log)
 end
 
-function performaction(player::RandomPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::Nothing
-    performrandommove(env, pieceidx, log)
+function performaction!(player::RandomPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::QuartoEnv
+    performrandommove!(env, pieceidx, log)
 end
 
-function performaction(player::WinningMovePlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::Nothing
-    performwinningmmove(env, pieceidx, log)
+function performaction!(player::WinningMovePlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::QuartoEnv
+    performwinningmmove!(env, pieceidx, log)
 end
 
-function performaction(player::MiniMaxPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::Nothing
-    performminimaxaction(env, pieceidx, player.depth, log)
+function performaction!(player::MiniMaxPlayer, env::QuartoEnv, pieceidx::UInt8, log::Bool=false)::QuartoEnv
+    performminimaxaction!(env, pieceidx, player.depth, log)
 end
 
 
@@ -342,10 +342,10 @@ function run(env::QuartoEnv, player1::Player, player2::Player; rendergame::Bool=
     while !(isdraw(env) || iswin(env))
         if env.player
             piece = selectpiece(env, player1, logmoves)
-            performaction(player2, env, piece, logmoves)
+            performaction!(player2, env, piece, logmoves)
         else
             piece = selectpiece(env, player2, logmoves)
-            performaction(player1, env, piece, logmoves)
+            performaction!(player1, env, piece, logmoves)
         end
         
         rendergame && render(env)
